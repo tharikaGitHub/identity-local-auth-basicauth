@@ -53,6 +53,7 @@ import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.carbon.identity.governance.IdentityGovernanceException;
 import org.wso2.carbon.identity.governance.IdentityGovernanceService;
+import org.wso2.carbon.identity.multi.attribute.login.mgt.MultiAttributeLoginService;
 import org.wso2.carbon.identity.recovery.RecoveryScenarios;
 import org.wso2.carbon.identity.testutil.powermock.PowerMockIdentityBaseTest;
 import org.wso2.carbon.user.api.RealmConfiguration;
@@ -103,7 +104,7 @@ import static org.wso2.carbon.identity.application.authenticator.basicauth.util.
  */
 @PrepareForTest({IdentityTenantUtil.class, BasicAuthenticatorServiceComponent.class, User
         .class, MultitenantUtils.class, FrameworkUtils.class, FileBasedConfigurationBuilder.class,
-        IdentityUtil.class, UserCoreUtil.class, Utils.class, SignatureUtil.class})
+        IdentityUtil.class, UserCoreUtil.class, Utils.class, SignatureUtil.class, BasicAuthenticatorDataHolder.class})
 public class BasicAuthenticatorTestCase extends PowerMockIdentityBaseTest {
 
     private HttpServletRequest mockRequest;
@@ -116,6 +117,8 @@ public class BasicAuthenticatorTestCase extends PowerMockIdentityBaseTest {
     private IdentityErrorMsgContext mockIdentityErrorMsgContext;
     private User mockUser;
     private IdentityGovernanceService governanceService;
+    private MultiAttributeLoginService multiAttributeLoginService;
+    private BasicAuthenticatorDataHolder basicAuthenticatorDataHolder;
 
     private AuthenticatedUser authenticatedUser;
     private Boolean isrememberMe = false;
@@ -146,6 +149,8 @@ public class BasicAuthenticatorTestCase extends PowerMockIdentityBaseTest {
         System.setProperty("carbon.config.dir.path", "carbon.home");
 
         governanceService = mock(IdentityGovernanceService.class);
+        multiAttributeLoginService = mock(MultiAttributeLoginService.class);
+        BasicAuthenticatorDataHolder.getInstance().setMultiAttributeLogin(multiAttributeLoginService);
 
         Property[] captchaProperties = new Property[1];
         Property captchaEnabled = new Property();
@@ -624,6 +629,13 @@ public class BasicAuthenticatorTestCase extends PowerMockIdentityBaseTest {
 
         mockUser = mock(User.class);
         when(mockUser.getUserName()).thenReturn(dummyUserName);
+        mockStatic(BasicAuthenticatorDataHolder.class);
+        multiAttributeLoginService = mock(MultiAttributeLoginService.class);
+        basicAuthenticatorDataHolder = mock(BasicAuthenticatorDataHolder.class);
+        when(BasicAuthenticatorDataHolder.getInstance()).thenReturn(basicAuthenticatorDataHolder);
+        when(basicAuthenticatorDataHolder.getMultiAttributeLogin()).thenReturn(multiAttributeLoginService);
+        when(multiAttributeLoginService.isEnabled("carbon.super")).thenReturn(true);
+
         mockStatic(User.class);
         when(User.getUserFromUserName(anyString())).thenReturn(mockUser);
 
